@@ -1,35 +1,85 @@
 version: 2.1
-parameters:
-  DO_DESTROY:
-    type: boolean
-    default: false
+
 jobs:
-  terraform-job:
+  plan-apply:
+    working_directory: /tmp/project
     docker:
-      # Using a Docker image with Terraform installed (e.g., CircleCI's Terraform image or a custom one).
       - image: hashicorp/terraform:latest
     steps:
-
       - checkout
-
-      # Terraform init step
       - run:
-          name: "Terraform Init"
-          command: terraform init
-
-      # Conditionally run Terraform apply or destroy based on the DO_DESTROY environment variable
-      - run:
-          name: "Terraform Plan or Apply/Destroy"
+          name: "Terraform Init & Plan"
           command: |
-              echo "Running terraform destroy..."
-              terraform destroy --auto-approve
+            terraform init -input=false
+            terraform plan -out=tfapply
+      - persist_to_workspace:
+          root: /tmp/project
+          paths:
+            - .
 
+  apply:
+    docker:
+      - image: hashicorp/terraform:latest
+    steps:
+      - attach_workspace:
+          at: /tmp/project
+      - run:
+          name: "Terraform Apply"
+          command: |
+            cd /tmp/project
+            terraform apply -auto-approve tfapply
+      - persist_to_workspace:
+          root: /tmp/project
+          paths:
+            - .
+
+  plan-destroy:
+    docker:
+      - image: hashicorp/terraform:latest
+    steps:
+      - attach_workspace:
+          at: /tmp/project
+      - run:
+          name: "Terraform Plan for Destroy"
+          command: |
+            cd /tmp/project
+            terraform plan -destroy -out=tfdestroy
+      - persist_to_workspace:
+          root: /tmp/project
+          paths:
+            - .
+
+  destroy:
+    docker:
+      - image: hashicorp/terraform:latest
+    steps:
+      - attach_workspace:
+          at: /tmp/project
+      - run:
+          name: "Terraform Destroy"
+          command: |
+            cd /tmp/project
+            terraform apply -auto-approve tfdestroy
 
 workflows:
+  version: 2
   terraform-workflow:
     jobs:
-      - terraform-job:
-          context: my-aws-context # Use a CircleCI context to provide AWS credentials securely
-          filters:
-            branches:
-              only: circleci-project-setup
+      - plan-apply
+      - hold-apply:
+          type: approval
+          requires:
+            - plan-apply
+      - apply:
+          requires:
+            - hold-apply
+      - plan-destroy:
+          requires:
+            - apply
+      - hold-destroy:
+          type: approval
+          requires:
+            - plan-destroy
+      - destroy:
+          requires:
+            - hold-destroy
