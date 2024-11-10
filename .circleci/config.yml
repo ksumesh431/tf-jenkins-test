@@ -1,31 +1,42 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/executor-intro/ & https://circleci.com/docs/configuration-reference/#executor-job
+  terraform-job:
     docker:
-      # Specify the version you desire here
-      # See: https://circleci.com/developer/images/image/cimg/base
-      - image: cimg/base:current
+      # Using a Docker image with Terraform installed (e.g., CircleCI's Terraform image or a custom one).
+      - image: hashicorp/terraform:latest
+    environment:
+      # Set up AWS credentials as environment variables, using CircleCI's environment variables or contexts.
+      AWS_ACCESS_KEY_ID: << pipeline.parameters.AWS_ACCESS_KEY_ID >>
+      AWS_SECRET_ACCESS_KEY: << pipeline.parameters.AWS_SECRET_ACCESS_KEY >>
+      # Environment variable to control destroy behavior
+      DO_DESTROY: "false" # Set to true to run terraform destroy
 
-    # Add steps to the job
-    # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
     steps:
-      # Checkout the code as the first step.
-      - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
+      # Terraform init step
+      - run:
+          name: "Terraform Init"
+          command: terraform init
+
+      # Conditionally run Terraform apply or destroy based on the DO_DESTROY environment variable
+      - run:
+          name: "Terraform Plan or Apply/Destroy"
+          command: |
+            if [ "$DO_DESTROY" = "true" ]; then
+              echo "Running terraform destroy..."
+              terraform destroy --auto-approve
+            else
+              echo "Running terraform plan and apply..."
+              terraform plan
+              terraform apply --auto-approve
+            fi
+
 workflows:
-  say-hello-workflow: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  terraform-workflow:
     jobs:
-      - say-hello
+      - terraform-job:
+          context: my-aws-context # Use a CircleCI context to provide AWS credentials securely
+          filters:
+            branches:
+              only: main
