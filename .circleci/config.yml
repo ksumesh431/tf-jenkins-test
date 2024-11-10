@@ -21,14 +21,9 @@ jobs:
       - run:
           name: "Terraform Plan or Apply/Destroy"
           command: |
-            if [ "$DO_DESTROY" = "true" ]; then
               echo "Running terraform destroy..."
               terraform destroy --auto-approve
-            else
-              echo "Running terraform plan and apply..."
-              terraform plan
-              terraform apply --auto-approve
-            fi
+
 
 workflows:
   terraform-workflow:
