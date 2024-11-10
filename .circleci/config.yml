@@ -11,6 +11,8 @@ jobs:
 
     steps:
 
+      - checkout
+
       # Terraform init step
       - run:
           name: "Terraform Init"
