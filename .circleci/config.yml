@@ -6,9 +6,6 @@ jobs:
       # Using a Docker image with Terraform installed (e.g., CircleCI's Terraform image or a custom one).
       - image: hashicorp/terraform:latest
     environment:
-      # Set up AWS credentials as environment variables, using CircleCI's environment variables or contexts.
-      AWS_ACCESS_KEY_ID: << pipeline.parameters.AWS_ACCESS_KEY_ID >>
-      AWS_SECRET_ACCESS_KEY: << pipeline.parameters.AWS_SECRET_ACCESS_KEY >>
       # Environment variable to control destroy behavior
       DO_DESTROY: "false" # Set to true to run terraform destroy
 
