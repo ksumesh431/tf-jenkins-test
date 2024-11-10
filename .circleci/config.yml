@@ -1,14 +1,13 @@
 version: 2.1
-
+parameters:
+  DO_DESTROY:
+    type: boolean
+    default: false
 jobs:
   terraform-job:
     docker:
       # Using a Docker image with Terraform installed (e.g., CircleCI's Terraform image or a custom one).
       - image: hashicorp/terraform:latest
-    environment:
-      # Environment variable to control destroy behavior
-      DO_DESTROY: "false" # Set to true to run terraform destroy
-
     steps:
 
       - checkout
