@@ -36,4 +36,4 @@ workflows:
           context: my-aws-context # Use a CircleCI context to provide AWS credentials securely
           filters:
             branches:
-              only: main
+              only: circleci-project-setup
