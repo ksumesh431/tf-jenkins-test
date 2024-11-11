@@ -7,6 +7,8 @@ pipeline {
     environment {
         TF_VAR_region = 'us-east-1'
         TF_VERSION = '1.9.8' // Specify the required Terraform version
+        AWS_ACCESS_KEY_ID = credentials("AWS_ACCESS_KEY_ID")
+        AWS_SECRET_ACCESS_KEY = credentials("AWS_SECRET_ACCESS_KEY")
     }
     options {
         timestamps()            
@@ -16,47 +18,39 @@ pipeline {
     stages {
         stage('Install Terraform') {
             steps {
-                ansiColor('xterm') {
-                    script {
-                        sh """
-                            if ! terraform --version | grep -q '${TF_VERSION}'; then
-                                curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                                unzip terraform.zip
-                                sudo mv terraform /usr/local/bin/
-                                rm terraform.zip
-                            fi
-                            terraform --version
-                        """
-                    }
+                script {
+                    sh """
+                        if ! terraform --version | grep -q '${TF_VERSION}'; then
+                            curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                            unzip terraform.zip
+                            sudo mv terraform /usr/local/bin/
+                            rm terraform.zip
+                        fi
+                        terraform --version
+                    """
                 }
             }
         }
         
         stage('Terraform Init') {
             steps {
-                ansiColor('xterm') {
-                    sh 'terraform init -input=false'
-                }
+                sh 'terraform init -input=false'
             }
         }
         
         stage('Terraform Validate') {
             steps {
-                ansiColor('xterm') {
-                    sh 'terraform validate'
-                }
+                sh 'terraform validate'
             }
         }
         
         stage('Terraform Plan') {
             steps {
-                ansiColor('xterm') {
-                    script {
-                        if (params.ACTION == 'apply') {
-                            sh 'terraform plan -out=tfplan -input=false'
-                        } else if (params.ACTION == 'destroy') {
-                            sh 'terraform plan -destroy -out=tfplan -input=false'
-                        }
+                script {
+                    if (params.ACTION == 'apply') {
+                        sh 'terraform plan -out=tfplan -input=false'
+                    } else if (params.ACTION == 'destroy') {
+                        sh 'terraform plan -destroy -out=tfplan -input=false'
                     }
                 }
             }
@@ -75,13 +69,11 @@ pipeline {
                 }
             }
             steps {
-                ansiColor('xterm') {
-                    script {
-                        if (params.ACTION == 'apply') {
-                            sh 'terraform apply -input=false tfplan'
-                        } else if (params.ACTION == 'destroy') {
-                            sh 'terraform apply -destroy -input=false tfplan'
-                        }
+                script {
+                    if (params.ACTION == 'apply') {
+                        sh 'terraform apply -input=false tfplan'
+                    } else if (params.ACTION == 'destroy') {
+                        sh 'terraform apply -destroy -input=false tfplan'
                     }
                 }
             }
