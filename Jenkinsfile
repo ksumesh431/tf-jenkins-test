@@ -5,7 +5,6 @@ pipeline {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Choose Terraform action to execute')
     }
     environment {
-        TF_VAR_region = 'us-east-1'
         TF_VERSION = '1.9.8' // Specify the required Terraform version
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
@@ -54,13 +53,11 @@ pipeline {
                     }
                 }
             }
-        // No artifact archiving here, so the post block is removed
         }
 
         stage('Terraform Apply/Destroy') {
             steps {
                 script {
-                    // Prompt the user based on the selected action
                     if (params.ACTION == 'apply') {
                         // Wait for user confirmation to apply
                         input(message: 'Proceed with Apply?')
