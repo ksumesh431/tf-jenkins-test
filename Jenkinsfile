@@ -62,22 +62,22 @@ pipeline {
         }
         
         stage('Terraform Apply/Destroy') {
-            when {
-                expression {
-                    (params.ACTION == 'apply' && input(message: 'Proceed with Apply?')) || 
-                    (params.ACTION == 'destroy' && input(message: 'Proceed with Destroy?'))
-                }
-            }
             steps {
                 script {
+                    // Prompt the user based on the selected action
                     if (params.ACTION == 'apply') {
+                        // Wait for user confirmation to apply
+                        input(message: 'Proceed with Apply?')
                         sh 'terraform apply -input=false tfplan'
                     } else if (params.ACTION == 'destroy') {
+                        // Wait for user confirmation to destroy
+                        input(message: 'Proceed with Destroy?')
                         sh 'terraform apply -destroy -input=false tfplan'
                     }
                 }
             }
         }
+
     }
     post {
         always {
