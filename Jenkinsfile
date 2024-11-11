@@ -13,6 +13,7 @@ pipeline {
         timestamps()
         disableConcurrentBuilds()
         timeout(time: 20, unit: 'MINUTES')
+        ansiColor('xterm')
     }
     stages {
         stage('Install Terraform') {
