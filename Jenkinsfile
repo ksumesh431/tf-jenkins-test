@@ -64,7 +64,7 @@ pipeline {
         stage('Terraform Apply/Destroy') {
             when {
                 expression {
-                    (params.ACTION == 'apply' && BRANCH_NAME == 'main' && input(message: 'Proceed with Apply?')) || 
+                    (params.ACTION == 'apply' && input(message: 'Proceed with Apply?')) || 
                     (params.ACTION == 'destroy' && input(message: 'Proceed with Destroy?'))
                 }
             }
