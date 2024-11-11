@@ -7,11 +7,11 @@ pipeline {
     environment {
         TF_VAR_region = 'us-east-1'
         TF_VERSION = '1.9.8' // Specify the required Terraform version
-        AWS_ACCESS_KEY_ID = credentials("AWS_ACCESS_KEY_ID")
-        AWS_SECRET_ACCESS_KEY = credentials("AWS_SECRET_ACCESS_KEY")
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
     options {
-        timestamps()            
+        timestamps()
         disableConcurrentBuilds()
         timeout(time: 20, unit: 'MINUTES')
     }
@@ -31,19 +31,19 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Terraform Init') {
             steps {
                 sh 'terraform init -input=false'
             }
         }
-        
+
         stage('Terraform Validate') {
             steps {
                 sh 'terraform validate'
             }
         }
-        
+
         stage('Terraform Plan') {
             steps {
                 script {
@@ -54,13 +54,9 @@ pipeline {
                     }
                 }
             }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'tfplan', allowEmptyArchive: true
-                }
-            }
+        // No artifact archiving here, so the post block is removed
         }
-        
+
         stage('Terraform Apply/Destroy') {
             steps {
                 script {
@@ -77,11 +73,10 @@ pipeline {
                 }
             }
         }
-
     }
     post {
         always {
-            cleanWs()
+            cleanWs() // Clean the workspace after the build
         }
         success {
             echo 'Terraform pipeline completed successfully!'
