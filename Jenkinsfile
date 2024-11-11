@@ -10,46 +10,53 @@ pipeline {
     }
     options {
         timestamps()            
-        ansiColor('xterm')
         disableConcurrentBuilds()
         timeout(time: 20, unit: 'MINUTES')
     }
     stages {
         stage('Install Terraform') {
             steps {
-                script {
-                    sh """
-                        if ! terraform --version | grep -q '${TF_VERSION}'; then
-                            curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                            unzip terraform.zip
-                            sudo mv terraform /usr/local/bin/
-                            rm terraform.zip
-                        fi
-                        terraform --version
-                    """
+                ansiColor('xterm') {
+                    script {
+                        sh """
+                            if ! terraform --version | grep -q '${TF_VERSION}'; then
+                                curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                                unzip terraform.zip
+                                sudo mv terraform /usr/local/bin/
+                                rm terraform.zip
+                            fi
+                            terraform --version
+                        """
+                    }
                 }
             }
         }
         
         stage('Terraform Init') {
             steps {
-                sh 'terraform init -input=false'
+                ansiColor('xterm') {
+                    sh 'terraform init -input=false'
+                }
             }
         }
         
         stage('Terraform Validate') {
             steps {
-                sh 'terraform validate'
+                ansiColor('xterm') {
+                    sh 'terraform validate'
+                }
             }
         }
         
         stage('Terraform Plan') {
             steps {
-                script {
-                    if (params.ACTION == 'apply') {
-                        sh 'terraform plan -out=tfplan -input=false'
-                    } else if (params.ACTION == 'destroy') {
-                        sh 'terraform plan -destroy -out=tfplan -input=false'
+                ansiColor('xterm') {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh 'terraform plan -out=tfplan -input=false'
+                        } else if (params.ACTION == 'destroy') {
+                            sh 'terraform plan -destroy -out=tfplan -input=false'
+                        }
                     }
                 }
             }
@@ -68,11 +75,13 @@ pipeline {
                 }
             }
             steps {
-                script {
-                    if (params.ACTION == 'apply') {
-                        sh 'terraform apply -input=false tfplan'
-                    } else if (params.ACTION == 'destroy') {
-                        sh 'terraform apply -destroy -input=false tfplan'
+                ansiColor('xterm') {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh 'terraform apply -input=false tfplan'
+                        } else if (params.ACTION == 'destroy') {
+                            sh 'terraform apply -destroy -input=false tfplan'
+                        }
                     }
                 }
             }
